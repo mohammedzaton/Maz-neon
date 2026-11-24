@@ -32,7 +32,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
-          key: maz-coast-debug-signing-v1
+          key: maz-coast-spectral-debug-v1
       - name: Android SDK and editor configuration
         run: |
           sdk_dir="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
@@ -59,7 +59,7 @@ jobs:
         continue-on-error: true
         env:
           LIBGL_ALWAYS_SOFTWARE: "true"
-        run: xvfb-run -a godot --path godot --script res://tests/render_preview.gd --rendering-method gl_compatibility --audio-driver Dummy --fixed-fps 60
+        run: xvfb-run -a godot --path godot --script res://tests/render_preview.gd --rendering-method gl_compatibility --audio-driver Dummy --fixed-fps 60 --disable-render-loop
       - name: Export native APK
         run: |
           mkdir -p godot/build
