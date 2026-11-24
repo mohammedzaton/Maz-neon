@@ -1,47 +1,73 @@
-name: Android APK
+name: Godot Android APK
 on:
   push:
     branches: [main]
+    paths:
+      - 'godot/**'
+      - '.github/workflows/android.yml'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  android:
+  native-android:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
-      - name: Install Android platform
+          java-version: '17'
+      - name: Install Godot and Android export templates
+        run: |
+          curl -fL --retry 2 'https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip' -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot-bin
+          sudo install /tmp/godot-bin/Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          curl -fL --retry 2 'https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz' -o /tmp/templates.tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          unzip -j -q /tmp/templates.tpz templates/android_debug.apk templates/android_release.apk -d "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+      - name: Android SDK and editor configuration
         run: |
           sdk_dir="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          "$sdk_dir/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk_dir" "platforms;android-36" "build-tools;36.0.0"
-      - run: npm ci --no-audit --no-fund
-      - run: npm test
-      - run: npm run licenses
-      - run: npm run android:prepare
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.14.3'
-      - name: Build installable debug APK
-        working-directory: android
-        run: gradle assembleDebug --no-daemon
-      - name: Name APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk MAZ-Neon-Rush-debug.apk
+          "$sdk_dir/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk_dir" 'platforms;android-35' 'build-tools;35.0.1'
+          mkdir -p "$HOME/.config/godot" "$HOME/.android"
+          keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug,O=Android,C=US'
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$sdk_dir"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+      - name: Import native project
+        run: godot --headless --path godot --editor --import --quit
+      - name: Test actual multitouch controls, physics and race progression
+        run: godot --headless --path godot --script res://tests/integration.gd --fixed-fps 60
+      - name: Render native scene previews
+        continue-on-error: true
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "true"
+        run: xvfb-run -a godot --path godot --script res://tests/render_preview.gd --rendering-method gl_compatibility --fixed-fps 60
+      - name: Export native APK
+        run: |
+          mkdir -p godot/build
+          godot --headless --path godot --export-debug Android build/MAZ-Coast-Racing-0.2.apk
+          test -s godot/build/MAZ-Coast-Racing-0.2.apk
+      - name: Verify APK signature
+        run: |
+          sdk_dir="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          "$sdk_dir/build-tools/35.0.1/apksigner" verify godot/build/MAZ-Coast-Racing-0.2.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: MAZ-Neon-Rush-APK
-          path: MAZ-Neon-Rush-debug.apk
+          name: MAZ-Coast-Racing-0.2-APK
+          path: godot/build/MAZ-Coast-Racing-0.2.apk
           retention-days: 30
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: MAZ-Neon-Rush-Web
-          path: dist/
+          name: MAZ-Coast-Racing-Previews
+          path: godot/build/preview-*.png
+          if-no-files-found: ignore
           retention-days: 30

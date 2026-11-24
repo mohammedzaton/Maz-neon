@@ -1,3 +1,17 @@
+# MAZ Coast Racing — native Godot edition
+
+The current Android game lives in [`godot/`](godot/README.md). It replaces the
+initial web APK with a native Godot 4.7.2 circuit racer, five AI rivals, three
+laps, real multitouch controls, drift and nitro. Download the latest
+**MAZ-Coast-Racing-0.2-APK** artifact from the Godot Android APK workflow.
+
+The native edition does not include active ads or the web AdMob integration.
+It is a playable indie prototype, not a store-ready or AAA title.
+
+---
+
+## Archived web prototype documentation
+
 # MAZ Neon Rush
 
 An original offline arcade highway racer for Android and the web. Drive a fictional
@@ -44,9 +58,9 @@ npm run dev
 Desktop: A/D or left/right to steer, S/down to brake, space/shift for nitro,
 Escape to pause. The car accelerates automatically. Android uses touch controls.
 
-## Android APK
+## Legacy web APK
 
-The `Android APK` GitHub Actions workflow builds an installable debug APK on pushes
+The former `Android APK` GitHub Actions workflow built an installable debug APK on pushes
 to `main`, or manually via Actions. Download artifact **MAZ-Neon-Rush-APK**, unzip,
 then install `MAZ-Neon-Rush-debug.apk`. This is signed with the runner's debug key,
 not a production signing key. Future debug builds may require uninstalling the old
