@@ -69,12 +69,12 @@ func make_cache() -> void:
     target.n.append((normal_basis*normals[i]).normalized())
     target.uv.append(uvs[i] if uvs!=null and i<uvs.size() else Vector2.ZERO)
    var indices=arrays[Mesh.ARRAY_INDEX]
-   if indices!=null and indices.size()>0:
-    for index in indices:
-     target.i.append(base+index)
-   else:
-    for i in vertices.size():
-     target.i.append(base+i)
+   var source_indices=indices if indices!=null and indices.size()>0 else PackedInt32Array(range(vertices.size()))
+   var mirrored=transform.basis.determinant()<0
+   for triangle in range(0,source_indices.size(),3):
+    target.i.append(base+source_indices[triangle])
+    target.i.append(base+source_indices[triangle+(2 if mirrored else 1)])
+    target.i.append(base+source_indices[triangle+(1 if mirrored else 2)])
  for group in data:
   var mesh=ArrayMesh.new()
   var mats=[]

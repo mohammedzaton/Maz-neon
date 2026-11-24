@@ -88,31 +88,43 @@ func build_road() -> void:
  var red = CoastCarModel.material(Color("d64832"))
  var curb_white = CoastCarModel.material(Color("e4dcca"))
  var rails = CoastCarModel.material(Color("77818b"),0.65,0.5)
+ var curb_red=[]
+ var curb_pale=[]
+ var dash_transforms=[]
+ var rail_bars=[]
+ var rail_posts=[]
  for i in range(0,ceili(length),6):
-  var p = sample(i)
-  var yaw = atan2(-direction(i).x,-direction(i).z)
+  var p=sample(i)
+  var yaw=atan2(-direction(i).x,-direction(i).z)
+  var basis=Basis(Vector3.UP,yaw)
   for side in [-1,1]:
-   var curb = CoastCarModel.box(self,Vector3(0.65,0.1,5.8),p+right(i)*side*9.1+Vector3.UP*0.05,red if (i/6)%2==0 else curb_white)
-   curb.rotation.y = yaw
+   var transform=Transform3D(basis,p+right(i)*side*9.1+Vector3.UP*0.05)
+   if (i/6)%2==0:
+    curb_red.append(transform)
+   else:
+    curb_pale.append(transform)
   if i%12==0:
-   var dash = CoastCarModel.box(self,Vector3(0.14,0.02,3.0),p+Vector3.UP*0.048,white)
-   dash.rotation.y = yaw
-  # Barrier rails are visible road-side boundaries, with physical collisions.
-  if i%12==0:
+   dash_transforms.append(Transform3D(basis,p+Vector3.UP*0.048))
    for side in [-1,1]:
-    var rail = StaticBody3D.new()
-    rail.position = p+right(i)*side*12.5
-    rail.rotation.y = yaw
-    add_child(rail)
-    CoastCarModel.box(rail,Vector3(0.22,0.45,12.5),Vector3(0,0.68,0),rails)
+    var at=p+right(i)*side*12.5
+    rail_bars.append(Transform3D(basis,at+Vector3.UP*0.68))
     for z in [-4,4]:
-     CoastCarModel.box(rail,Vector3(0.18,1.0,0.18),Vector3(0,0.4,z),rails)
-    var shape = CollisionShape3D.new()
-    var collision = BoxShape3D.new()
-    collision.size = Vector3(0.6,1.2,12.5)
-    shape.shape = collision
-    shape.position.y = 0.6
+     rail_posts.append(Transform3D(basis,at+basis*Vector3(0,0.4,z)))
+    var rail=StaticBody3D.new()
+    rail.position=at
+    rail.rotation.y=yaw
+    add_child(rail)
+    var shape=CollisionShape3D.new()
+    var collision=BoxShape3D.new()
+    collision.size=Vector3(0.6,1.2,12.5)
+    shape.shape=collision
+    shape.position.y=0.6
     rail.add_child(shape)
+ batch_boxes(Vector3(0.65,0.1,5.8),red,curb_red)
+ batch_boxes(Vector3(0.65,0.1,5.8),curb_white,curb_pale)
+ batch_boxes(Vector3(0.14,0.02,3),white,dash_transforms)
+ batch_boxes(Vector3(0.22,0.45,12.5),rails,rail_bars)
+ batch_boxes(Vector3(0.18,1,0.18),rails,rail_posts)
  for x in range(-8,9):
   for z in range(4):
    CoastCarModel.box(self,Vector3(1,0.025,1),Vector3(x,0.06,z+8),white if (x+z)%2==0 else CoastCarModel.material(Color("17212d")))
@@ -334,3 +346,8 @@ func build_race_landmarks() -> void:
   sign.rotation.y=atan2(-direction(d).x,-direction(d).z)
   sign.modulate=Color("ffe08d")
   add_child(sign)
+
+func batch_boxes(size: Vector3,mat: Material,transforms: Array) -> void:
+ var mesh=BoxMesh.new()
+ mesh.size=size
+ instance_mesh(mesh,mat,transforms)

@@ -29,12 +29,18 @@ jobs:
           curl -fL --retry 2 'https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz' -o /tmp/templates.tpz
           mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
           unzip -j -q /tmp/templates.tpz templates/android_debug.apk templates/android_release.apk -d "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: maz-coast-debug-signing-v1
       - name: Android SDK and editor configuration
         run: |
           sdk_dir="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           "$sdk_dir/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk_dir" 'platforms;android-35' 'build-tools;35.0.1'
           mkdir -p "$HOME/.config/godot" "$HOME/.android"
-          keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug,O=Android,C=US'
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug,O=Android,C=US'
+          fi
           cat > "$HOME/.config/godot/editor_settings-4.7.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
           [resource]

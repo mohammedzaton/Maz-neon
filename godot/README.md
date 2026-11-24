@@ -38,3 +38,11 @@ Original game code: Apache-2.0 (parent LICENSE). Spectral GT RS by
 JaronKBragg7337: CC0-1.0, with pinned source and license in `assets/spectral/`. Godot is MIT-licensed; engine
 copyright and third-party notices: https://godotengine.org/license/ . No commercial
 car brands, third-party music or paid assets are used.
+
+## Test build upgrades
+
+Version 0.2 used a disposable CI debug certificate. Uninstall 0.2 before installing
+0.3 if Android reports a signature conflict (uninstalling clears local records).
+Starting with 0.3 the workflow caches a debug-only keystore for subsequent testing
+builds. This is not a production signing key; use your own private release key
+for store distribution.
