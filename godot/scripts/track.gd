@@ -64,14 +64,17 @@ func build_road() -> void:
  asphalt = CoastCarModel.material(Color("303a43"),0.05,0.9)
  # Tileable procedural asphalt with subtle aggregate, generated once.
  var noise = FastNoiseLite.new()
- noise.frequency = 0.75
+ noise.frequency = 0.12
  var tex = NoiseTexture2D.new()
  tex.width = 128
  tex.height = 128
  tex.noise = noise
+ var ramp = Gradient.new()
+ ramp.colors = PackedColorArray([Color(0.65,0.65,0.65),Color(0.9,0.9,0.9)])
+ tex.color_ramp = ramp
  tex.seamless = true
  asphalt.albedo_texture = tex
- asphalt.uv1_scale = Vector3(7,7,7)
+ asphalt.uv1_scale = Vector3(1.8,1.8,1.8)
  asphalt.cull_mode = BaseMaterial3D.CULL_DISABLED
  asphalt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
  mesh_strip(-9,9,asphalt,0.025)
@@ -130,17 +133,17 @@ func build_environment() -> void:
  var e = Environment.new()
  var sky = Sky.new()
  var sm = ProceduralSkyMaterial.new()
- sm.sky_top_color = Color("24415b")
- sm.sky_horizon_color = Color("e8b68d")
+ sm.sky_top_color = Color("264f79")
+ sm.sky_horizon_color = Color("93b5c6")
  sm.ground_bottom_color = Color("34424b")
- sm.ground_horizon_color = Color("c8a786")
+ sm.ground_horizon_color = Color("819b9b")
  sm.sky_energy_multiplier = 0.7
  sky.sky_material = sm
  e.background_mode = Environment.BG_SKY
  e.sky = sky
  e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
  e.ambient_light_color = Color("b7c8d2")
- e.ambient_light_energy = 0.65
+ e.ambient_light_energy = 0.48
  e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
  e.fog_enabled = true
  e.fog_light_color = Color("aa9a8b")
@@ -149,8 +152,8 @@ func build_environment() -> void:
  add_child(env)
  var sun = DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-27,-35,0)
- sun.light_color = Color("ffdfb0")
- sun.light_energy = 1.45
+ sun.light_color = Color("ffdfbc")
+ sun.light_energy = 1.0
  sun.shadow_enabled = true
  sun.directional_shadow_max_distance = 110
  add_child(sun)
@@ -162,7 +165,7 @@ func build_environment() -> void:
  col.shape = shape
  col.position.y = -0.51
  ground.add_child(col)
- CoastCarModel.box(ground,Vector3(2200,0.1,2200),Vector3(0,-0.06,0),CoastCarModel.material(Color("9b9876"),0,1))
+ CoastCarModel.box(ground,Vector3(2200,0.1,2200),Vector3(0,-0.06,0),CoastCarModel.material(Color("718061"),0,1))
  var ocean = CoastCarModel.material(Color("347f8f"),0.3,0.22)
  CoastCarModel.box(self,Vector3(1300,0.2,1800),Vector3(850,-0.15,0),ocean)
 

@@ -32,7 +32,7 @@ jobs:
           "$sdk_dir/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk_dir" 'platforms;android-35' 'build-tools;35.0.1'
           mkdir -p "$HOME/.config/godot" "$HOME/.android"
           keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug,O=Android,C=US'
-          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          cat > "$HOME/.config/godot/editor_settings-4.7.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
           [resource]
           export/android/android_sdk_path = "$sdk_dir"
@@ -49,7 +49,7 @@ jobs:
         continue-on-error: true
         env:
           LIBGL_ALWAYS_SOFTWARE: "true"
-        run: xvfb-run -a godot --path godot --script res://tests/render_preview.gd --rendering-method gl_compatibility --fixed-fps 60
+        run: xvfb-run -a godot --path godot --script res://tests/render_preview.gd --rendering-method gl_compatibility --audio-driver Dummy --fixed-fps 60
       - name: Export native APK
         run: |
           mkdir -p godot/build

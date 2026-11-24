@@ -227,7 +227,8 @@ func update_camera(delta: float) -> void:
   menu_angle += delta*0.08
   var target = player.global_position+Vector3.UP*0.7
   camera.global_position = target+Vector3(7.2+sin(menu_angle)*1.2,2.6,7.5)
-  camera.look_at(target,Vector3.UP)
+  var camera_right = (target-camera.global_position).normalized().cross(Vector3.UP)
+  camera.look_at(target-camera_right*2.7,Vector3.UP)
   return
  var forward = -player.global_transform.basis.z
  var desired: Vector3

@@ -59,12 +59,22 @@ func build(color: Color, variant: int = 0) -> void:
  body.add_child(shell)
  box(body,Vector3(1.85,0.25,4.1),Vector3(0,0.51,0),paint)
  box(body,Vector3(1.91,0.12,4.26),Vector3(0,0.35,0),black)
- var cabin = box(body,Vector3(1.48,0.5,1.65),Vector3(0,1.07,0.1),glass)
- cabin.rotation.x = -0.06
- box(body,Vector3(1.47,0.07,1.0),Vector3(0,1.34,0.25),paint)
- for x in [-0.77,0.77]:
-  box(body,Vector3(0.075,0.52,1.6),Vector3(x,1.05,0.1),paint)
-  box(body,Vector3(0.25,0.12,0.23),Vector3(x*1.34,1.0,-0.64),paint)
+ # Sloped windshield, tapered roof and rear glass, rather than a box cabin.
+ var fl = Vector3(-0.74,0.85,-0.94)
+ var fr = Vector3(0.74,0.85,-0.94)
+ var tl = Vector3(-0.57,1.27,-0.29)
+ var tr = Vector3(0.57,1.27,-0.29)
+ var bl = Vector3(-0.6,1.25,0.65)
+ var br = Vector3(0.6,1.25,0.65)
+ var rl = Vector3(-0.78,0.85,1.16)
+ var rr = Vector3(0.78,0.85,1.16)
+ glass.cull_mode = BaseMaterial3D.CULL_DISABLED
+ for quad in [[fl,fr,tr,tl],[rl,bl,br,rr],[fl,tl,bl,rl],[fr,rr,br,tr]]:
+  surface(body,quad,glass)
+ surface(body,[tl,tr,br,bl],paint)
+ for x in [-0.74,0.74]:
+  box(body,Vector3(0.045,0.38,0.065),Vector3(x,1.02,0.25),black)
+  box(body,Vector3(0.25,0.1,0.23),Vector3(x*1.34,0.98,-0.64),paint)
  var white = material(Color("d9f3ec"))
  white.emission_enabled = true
  white.emission = Color("c5e9ee")
@@ -126,3 +136,14 @@ func animate(delta: float, speed: float, steering: float, boosting: bool) -> voi
  for flame in flames:
   flame.visible = boosting
   flame.scale.z = randf_range(0.7,1.35)
+
+func surface(parent: Node3D, quad: Array, mat: Material) -> void:
+ var st = SurfaceTool.new()
+ st.begin(Mesh.PRIMITIVE_TRIANGLES)
+ for index in [0,1,2,0,2,3]:
+  st.add_vertex(quad[index])
+ st.generate_normals()
+ var m = MeshInstance3D.new()
+ m.mesh = st.commit()
+ m.material_override = mat
+ parent.add_child(m)

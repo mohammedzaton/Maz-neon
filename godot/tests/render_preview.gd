@@ -4,6 +4,8 @@ func _initialize() -> void:
 func capture() -> void:
  var game = load("res://main.tscn").instantiate()
  root.add_child(game)
+ game.best_time = 0
+ game.show_home()
  for i in 50:
   await process_frame
  await RenderingServer.frame_post_draw
@@ -18,6 +20,7 @@ func capture() -> void:
   await physics_frame
  await RenderingServer.frame_post_draw
  image = root.get_texture().get_image()
+ print("TELEMETRY ",game.hud.speed_label.text," position ",game.hud.speed_label.global_position)
  if image and not image.is_empty():
   image.save_png(path+"preview-race.png")
  game.queue_free()

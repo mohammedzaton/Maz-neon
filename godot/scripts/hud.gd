@@ -14,6 +14,8 @@ var race_ui: Control
 var pause_menu: Control
 var results: Control
 var speed_label: Label
+var speed_back: Panel
+var unit_label: Label
 var lap_label: Label
 var position_label: Label
 var time_label: Label
@@ -102,7 +104,13 @@ func _ready() -> void:
  lap_label = label(race_ui,"LAP 1 / 3",24,Vector2(35,25),Vector2(250,40),CYAN)
  position_label = label(race_ui,"6 / 6",48,Vector2(35,68),Vector2(250,70))
  time_label = label(race_ui,"00:00.00",25,Vector2(35,142),Vector2(260,40),Color("d6e5e7"))
- speed_label = label(race_ui,"000",72,Vector2(0,0),Vector2(200,100))
+ speed_back = Panel.new()
+ speed_back.size = Vector2(205,137)
+ speed_back.add_theme_stylebox_override("panel",style(Color(0.025,0.06,0.08,0.88)))
+ speed_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ race_ui.add_child(speed_back)
+ speed_label = label(race_ui,"000",64,Vector2(0,0),Vector2(190,85))
+ unit_label = label(race_ui,"KM / H    •    NITRO",12,Vector2(0,0),Vector2(190,30),CYAN)
  drift_label = label(race_ui,"",20,Vector2(0,0),Vector2(400,45),CYAN)
  nitro_bar = ProgressBar.new()
  nitro_bar.show_percentage = false
@@ -186,7 +194,9 @@ func layout() -> void:
  for i in touch_buttons.size():
   var positions = [Vector2(88,615),Vector2(218,615),Vector2(925+dx,615),Vector2(1050+dx,615),Vector2(1175+dx,615),Vector2(1175+dx,482)]
   touch_buttons[i].position = positions[i]+Vector2(0,dy)-Vector2(56,56)
- speed_label.position = Vector2(size.x-235,265)
+ speed_back.position = Vector2(size.x-240,245)
+ speed_label.position = Vector2(size.x-223,249)
+ unit_label.position = Vector2(size.x-220,334)
  nitro_bar.position = Vector2(size.x-220,370)
  drift_label.position = Vector2(size.x/2-190,105)
  countdown_label.position = Vector2(size.x/2-80,size.y/2-80)
