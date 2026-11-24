@@ -1,0 +1,46 @@
+name: Android APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run licenses
+      - run: npm run android:prepare
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: Build installable debug APK
+        working-directory: android
+        run: gradle assembleDebug --no-daemon
+      - name: Name APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk MAZ-Neon-Rush-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MAZ-Neon-Rush-APK
+          path: MAZ-Neon-Rush-debug.apk
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MAZ-Neon-Rush-Web
+          path: dist/
+          retention-days: 30
