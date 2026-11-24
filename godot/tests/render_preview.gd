@@ -16,13 +16,23 @@ func capture() -> void:
   image.save_png(path+"preview-menu.png")
  game.start_race()
  game.countdown = 0
- for i in 100:
+ for i in 120:
   await physics_frame
  await RenderingServer.frame_post_draw
  image = root.get_texture().get_image()
  print("TELEMETRY ",game.hud.speed_label.text," position ",game.hud.speed_label.global_position)
  if image and not image.is_empty():
   image.save_png(path+"preview-race.png")
+ game.player.speed=48
+ game.player.nitro=100
+ Input.action_press("boost")
+ for i in 20:
+  await physics_frame
+ await RenderingServer.frame_post_draw
+ image=root.get_texture().get_image()
+ if image and not image.is_empty():
+  image.save_png(path+"preview-nitro.png")
+ Input.action_release("boost")
  game.queue_free()
  await process_frame
  quit()

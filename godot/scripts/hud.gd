@@ -88,7 +88,7 @@ func _ready() -> void:
  menu.add_child(shade)
  label(menu,"M A Z   /   R A C I N G",18,Vector2(60,40),Vector2(500,40),CYAN)
  label(menu,"OWN THE\nCOAST.",88,Vector2(58,125),Vector2(600,210))
- label(menu,"COAST CIRCUIT  /  SUNSET SESSION",16,Vector2(65,365),Vector2(560,40),CYAN)
+ label(menu,"COAST CIRCUIT  /  SPECTRAL EDITION",16,Vector2(65,365),Vector2(560,40),CYAN)
  label(menu,"6 DRIVERS    •    3 LAPS    •    ONE WINNER",16,Vector2(65,413),Vector2(550,40),Color("b8c7ce"))
  button(menu,"START RACE    ▶",Vector2(65,485),Vector2(300,68),func(): start_requested.emit(),true)
  button(menu,"SOUND  ♪",Vector2(380,485),Vector2(165,68),func(): sound_requested.emit())
@@ -125,8 +125,7 @@ func _ready() -> void:
  button(race_ui,"RESET",Vector2(940,25),Vector2(100,52),func(): rescue_requested.emit())
  countdown_label = label(root,"",100,Vector2(560,245),Vector2(400,160),CYAN)
  # Native multitouch buttons: no JavaScript joystick and no mouse-only pressed signals.
- add_touch("steer_left","◀",Vector2(88,615),Color("263e49"))
- add_touch("steer_right","▶",Vector2(218,615),Color("263e49"))
+ label(race_ui,"المس يمين أو شمال الشاشة • اسحب لتحديد قوة التوجيه",14,Vector2(40,650),Vector2(650,40),CYAN)
  add_touch("brake","BRAKE",Vector2(925,615),Color("794438"))
  add_touch("drift","DRIFT",Vector2(1050,615),Color("4a5968"))
  add_touch("boost","NITRO",Vector2(1175,615),Color("237a71"))
@@ -192,7 +191,7 @@ func layout() -> void:
  var dx = size.x-1280
  var dy = size.y-720
  for i in touch_buttons.size():
-  var positions = [Vector2(88,615),Vector2(218,615),Vector2(925+dx,615),Vector2(1050+dx,615),Vector2(1175+dx,615),Vector2(1175+dx,482)]
+  var positions = [Vector2(925+dx,615),Vector2(1050+dx,615),Vector2(1175+dx,615),Vector2(1175+dx,482)]
   touch_buttons[i].position = positions[i]+Vector2(0,dy)-Vector2(56,56)
  speed_back.position = Vector2(size.x-240,245)
  speed_label.position = Vector2(size.x-223,249)
@@ -208,7 +207,7 @@ func show_mode(mode: String) -> void:
  results.visible = mode=="results"
  countdown_label.visible = mode=="countdown"
  for b in touch_buttons:
-  b.visible = mode=="race"
+  b.visible = mode=="race" and (b.action!="throttle" or not assist.button_pressed)
 
 func draw_map(at_points: PackedVector2Array, racers: Array[Vector2]) -> void:
  map_points = at_points

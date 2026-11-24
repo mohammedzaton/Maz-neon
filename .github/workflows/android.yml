@@ -5,6 +5,7 @@ on:
     paths:
       - 'godot/**'
       - '.github/workflows/android.yml'
+      - 'scripts/fetch_game_assets.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,6 +19,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Fetch checksum-pinned CC0 vehicle
+        run: python scripts/fetch_game_assets.py
       - name: Install Godot and Android export templates
         run: |
           curl -fL --retry 2 'https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip' -o /tmp/godot.zip
@@ -46,6 +49,7 @@ jobs:
       - name: Test actual multitouch controls, physics and race progression
         run: godot --headless --path godot --script res://tests/integration.gd --fixed-fps 60
       - name: Render native scene previews
+        timeout-minutes: 4
         continue-on-error: true
         env:
           LIBGL_ALWAYS_SOFTWARE: "true"
@@ -53,16 +57,16 @@ jobs:
       - name: Export native APK
         run: |
           mkdir -p godot/build
-          godot --headless --path godot --export-debug Android build/MAZ-Coast-Racing-0.2.apk
-          test -s godot/build/MAZ-Coast-Racing-0.2.apk
+          godot --headless --path godot --export-debug Android build/MAZ-Coast-Racing-0.3.apk
+          test -s godot/build/MAZ-Coast-Racing-0.3.apk
       - name: Verify APK signature
         run: |
           sdk_dir="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          "$sdk_dir/build-tools/35.0.1/apksigner" verify godot/build/MAZ-Coast-Racing-0.2.apk
+          "$sdk_dir/build-tools/35.0.1/apksigner" verify godot/build/MAZ-Coast-Racing-0.3.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: MAZ-Coast-Racing-0.2-APK
-          path: godot/build/MAZ-Coast-Racing-0.2.apk
+          name: MAZ-Coast-Racing-0.3-APK
+          path: godot/build/MAZ-Coast-Racing-0.3.apk
           retention-days: 30
       - uses: actions/upload-artifact@v4
         if: always()

@@ -37,7 +37,7 @@ func build(owner_track: CoastTrack, color: Color, player: bool, title: String) -
  model.build(color)
  var shape = CollisionShape3D.new()
  var box = BoxShape3D.new()
- box.size = Vector3(1.8,1.2,4)
+ box.size = Vector3(2.0,1.2,4.5)
  shape.shape = box
  shape.position.y = 0.62
  add_child(shape)
@@ -97,13 +97,13 @@ func _physics_process(delta: float) -> void:
   throttle = clampf(1-curve_amount*0.65,0.45,1)
   braking = curve_amount>0.85 and speed>33
   boosting = false
- steer = move_toward(steer,desired_steer,delta*5.0)
+ steer = move_toward(steer,desired_steer,delta*11.0)
  var center = track.sample(progress)
  var offroad = Vector2(global_position.x-center.x,global_position.z-center.z).length()>9.2
  var limit = max_speed if is_player else max_speed*ai_skill
  if offroad:
   limit = 17
- var acceleration = 19.0 if is_player else 18.0
+ var acceleration = 24.0 if is_player else 18.0
  if boosting:
   limit += 17
   acceleration += 16
@@ -111,19 +111,19 @@ func _physics_process(delta: float) -> void:
  else:
   nitro = minf(100,nitro+(4+absf(steer)*2)*delta)
  if braking:
-  speed = move_toward(speed,0,delta*36)
+  speed = move_toward(speed,0,delta*42)
  elif throttle>0:
   speed = move_toward(speed,limit*throttle,delta*acceleration)
  else:
   speed = move_toward(speed,0,delta*5)
  if speed>limit:
   speed = move_toward(speed,limit,delta*12)
- var speed_factor = clampf(speed/15,0,1)
- var turn_rate = 1.65/(1+speed*0.016)
- rotation.y -= steer*turn_rate*speed_factor*delta*(1.45 if handbrake else 1.0)
+ var speed_factor = clampf(speed/9,0,1)
+ var turn_rate = lerpf(2.6,1.15,clampf(speed/75.0,0,1))
+ rotation.y -= steer*turn_rate*speed_factor*delta*(1.25 if handbrake else 1.0)
  forward = -global_transform.basis.z
  var desired_velocity = forward*speed
- var grip = 2.2 if handbrake else 9.0
+ var grip = 3.0 if handbrake else 13.0
  var planar = Vector3(velocity.x,0,velocity.z).lerp(desired_velocity,1-exp(-grip*delta))
  velocity.x = planar.x
  velocity.z = planar.z
@@ -158,6 +158,7 @@ func _physics_process(delta: float) -> void:
  else:
   reset_timer = 0
  model.animate(delta,speed,steer,boosting)
+ model.set_drift(is_drifting)
  if is_drifting:
   trail_timer += delta
   if trail_timer>0.07:

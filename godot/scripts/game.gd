@@ -12,9 +12,12 @@ var countdown: float = 3.0
 var elapsed: float = 0
 var best_time: float = 0
 var camera_mode: int = 0
+var camera_roll: float = 0
 var saved_assist: bool = true
 var toast_time: float = 0
 var camera_shake: float = 0
+var screen_steering: CoastScreenSteering
+var speed_fx: CoastSpeedFX
 var menu_angle: float = 0
 var lap_started: float = 0
 var lap_times: Array[float] = []
@@ -27,10 +30,16 @@ func _ready() -> void:
  add_child(track)
  player = CoastRacer.new()
  add_child(player)
- player.build(track,Color("19c0a2"),true,"APEX GT")
+ player.build(track,Color("18c3b5"),true,"SPECTRAL GT RS")
+ player.model.enable_player_fx()
  player.spawn(14,0)
  player.lap_completed.connect(on_lap)
- player.impact.connect(func(): camera_shake=0.3)
+ player.impact.connect(func():
+  camera_shake=0.35
+  player.model.emit_sparks()
+  if speed_fx:
+   speed_fx.hit=0.7
+ )
  var colors = [Color("ee6b3b"),Color("e3be5d"),Color("436eae"),Color("9c6cba"),Color("e5e1d3")]
  for i in 5:
   var rival = CoastRacer.new()
@@ -42,11 +51,18 @@ func _ready() -> void:
   rivals.append(rival)
  camera = Camera3D.new()
  camera.fov = 63
- camera.far = 1600
+ camera.far = 1000
+ camera.near = 0.15
  add_child(camera)
  camera.current = true
  hud = CoastHUD.new()
  add_child(hud)
+ screen_steering = CoastScreenSteering.new()
+ screen_steering.hud = hud
+ add_child(screen_steering)
+ speed_fx = CoastSpeedFX.new()
+ speed_fx.steering = screen_steering
+ hud.add_child(speed_fx)
  hud.start_requested.connect(start_race)
  hud.pause_requested.connect(pause_race)
  hud.resume_requested.connect(resume_race)
@@ -56,7 +72,7 @@ func _ready() -> void:
    player.rescue()
    toast("BACK ON TRACK")
  )
- hud.camera_requested.connect(func(): camera_mode=(camera_mode+1)%2)
+ hud.camera_requested.connect(func(): camera_mode=(camera_mode+1)%3)
  hud.sound_requested.connect(func():
   audio.enabled = not audio.enabled
   toast("ENGINE AUDIO ON" if audio.enabled else "ENGINE AUDIO OFF")
@@ -86,14 +102,26 @@ func setup_input() -> void:
    InputMap.action_add_event(action,event)
 
 func clear_input() -> void:
+ if screen_steering:
+  screen_steering.reset()
  for action in ["steer_left","steer_right","throttle","brake","drift","boost"]:
   Input.action_release(action)
 
 func set_running(value: bool) -> void:
  player.running = value
+ if screen_steering:
+  screen_steering.enabled=value
+ if speed_fx:
+  speed_fx.active=value
  for rival in rivals:
   rival.running = value
  audio.active = value
+ if not value:
+  for racer in [player]+rivals:
+   racer.boosting=false
+   racer.model.set_drift(false)
+   for flame in racer.model.flames:
+    flame.visible=false
 
 func show_home() -> void:
  state = "menu"
@@ -217,6 +245,9 @@ func _physics_process(delta: float) -> void:
  toast_time = maxf(0,toast_time-delta)
  if audio:
   audio.engine_speed = player.speed
+ if speed_fx:
+  speed_fx.speed=player.speed
+  speed_fx.boost=lerpf(speed_fx.boost,1.0 if player.boosting else 0.0,delta*6)
  camera_shake = maxf(0,camera_shake-delta)
  update_camera(delta)
 
@@ -229,6 +260,7 @@ func update_camera(delta: float) -> void:
   camera.global_position = target+Vector3(7.2+sin(menu_angle)*1.2,2.6,7.5)
   var camera_right = (target-camera.global_position).normalized().cross(Vector3.UP)
   camera.look_at(target-camera_right*2.7,Vector3.UP)
+  camera.fov=lerpf(camera.fov,52.0,delta*3)
   return
  var forward = -player.global_transform.basis.z
  var desired: Vector3
@@ -236,16 +268,21 @@ func update_camera(delta: float) -> void:
  if camera_mode==0:
   desired = player.global_position-forward*8.0+Vector3.UP*3.5
   target = player.global_position+forward*8+Vector3.UP*0.8
- else:
+ elif camera_mode==1:
   desired = player.global_position+forward*0.7+Vector3.UP*1.5
   target = player.global_position+forward*30+Vector3.UP*1.2
+ else:
+  desired = player.global_position+forward*0.15-player.global_transform.basis.x*0.33+Vector3.UP*1.12
+  target = player.global_position+forward*30+Vector3.UP*1.13
  var smoothing = 1-exp(-delta*(8 if camera_mode==0 else 25))
  camera.global_position = camera.global_position.lerp(desired,smoothing)
  if camera_shake>0:
   camera.global_position += Vector3(randf_range(-0.1,0.1),randf_range(-0.07,0.07),0)
  if camera.global_position.distance_to(target)>0.1:
   camera.look_at(target,Vector3.UP)
- camera.fov = lerpf(camera.fov,76.0 if player.boosting else 63.0,delta*3)
+ camera.fov = lerpf(camera.fov,80.0 if player.boosting else 64.0+player.speed*0.07,delta*4)
+ camera_roll=lerpf(camera_roll,-player.steer*0.035,delta*5)
+ camera.rotation.z=camera_roll
 
 func load_record() -> void:
  if FileAccess.file_exists("user://coast_record.json"):
@@ -264,7 +301,7 @@ func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("rescue") and state=="race":
   player.rescue()
  if event.is_action_pressed("camera_view"):
-  camera_mode = (camera_mode+1)%2
+  camera_mode = (camera_mode+1)%3
 
 func _notification(what: int) -> void:
  if what in [NOTIFICATION_APPLICATION_FOCUS_OUT,NOTIFICATION_APPLICATION_PAUSED]:

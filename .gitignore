@@ -19,3 +19,5 @@ android/capacitor-cordova-android-plugins/
 godot/.godot/
 godot/build/
 godot/export_credentials.cfg
+godot/assets/spectral/*.glb
+godot/assets/spectral/*.download

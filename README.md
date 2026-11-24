@@ -1,12 +1,15 @@
-# MAZ Coast Racing — native Godot edition
+# MAZ Coast Racing 0.3 — Spectral Edition
 
-The current Android game lives in [`godot/`](godot/README.md). It replaces the
-initial web APK with a native Godot 4.7.2 circuit racer, five AI rivals, three
-laps, real multitouch controls, drift and nitro. Download the latest
-**MAZ-Coast-Racing-0.2-APK** artifact from the Godot Android APK workflow.
+Current Android build: [`godot/`](godot/README.md). Version 0.3 introduces
+full-screen touch/drag steering, a checksum-pinned CC0 Spectral GT RS vehicle,
+animated wheels and active wing, drift smoke, collision sparks, nitro flames and
+speed effects. The circuit adds palm-lined sections, pits, stands, an illuminated
+tunnel, sector gates and animated water.
 
-The native edition does not include active ads or the web AdMob integration.
-It is a playable indie prototype, not a store-ready or AAA title.
+Run `python scripts/fetch_game_assets.py` before opening the native project.
+The native Android workflow builds **MAZ-Coast-Racing-0.3-APK**. No ads, analytics,
+network access or model API calls are enabled in the game. This remains an indie
+testing build and needs real-device handling and performance feedback.
 
 ---
 
