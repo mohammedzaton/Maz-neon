@@ -201,6 +201,9 @@ func layout() -> void:
  countdown_label.position = Vector2(size.x/2-80,size.y/2-80)
 
 func show_mode(mode: String) -> void:
+ if OS.has_feature("web"):
+  var document = JavaScriptBridge.get_interface("document")
+  document.documentElement.setAttribute("data-coast-state",mode)
  menu.visible = mode=="menu"
  race_ui.visible = mode in ["race","countdown"]
  pause_menu.visible = mode=="pause"
