@@ -167,7 +167,7 @@ func build_environment() -> void:
  sun.rotation_degrees = Vector3(-27,-35,0)
  sun.light_color = Color("ffdfbc")
  sun.light_energy = 1.0
- sun.shadow_enabled = true
+ sun.shadow_enabled = not OS.has_feature("web")
  sun.directional_shadow_max_distance = 110
  add_child(sun)
  var ground = StaticBody3D.new()
