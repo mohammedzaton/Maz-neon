@@ -23,6 +23,7 @@ var lap_started: float = 0
 var lap_times: Array[float] = []
 const TOTAL_LAPS: int = 3
 var web_race_control: JavaScriptObject
+var web_countdown_deadline_ms: int = 0
 
 func _ready() -> void:
  setup_input()
@@ -154,6 +155,8 @@ func start_race() -> void:
  lap_started = 0
  lap_times.clear()
  countdown = 3.4
+ if OS.has_feature("web"):
+  web_countdown_deadline_ms = Time.get_ticks_msec() + int(countdown * 1000.0)
  set_running(false)
  player.spawn(14,-3.3)
  player.throttle_assist = saved_assist
@@ -247,7 +250,10 @@ func _physics_process(delta: float) -> void:
  if player==null:
   return
  if state=="countdown":
-  countdown -= delta
+  if OS.has_feature("web"):
+   countdown = maxf(0.0, (web_countdown_deadline_ms - Time.get_ticks_msec()) / 1000.0)
+  else:
+   countdown -= delta
   hud.countdown_label.text = str(ceili(countdown)) if countdown>0 else "GO"
   if countdown<=0:
    state = "race"
@@ -319,6 +325,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
  if what in [NOTIFICATION_APPLICATION_FOCUS_OUT,NOTIFICATION_APPLICATION_PAUSED]:
+  if OS.has_feature("web") and what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+   var document = JavaScriptBridge.get_interface("document")
+   if not document.hidden and document.hasFocus():
+    return
   pause_race()
   if state=="countdown":
    state = "pause"
