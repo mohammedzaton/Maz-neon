@@ -22,6 +22,7 @@ var menu_angle: float = 0
 var lap_started: float = 0
 var lap_times: Array[float] = []
 const TOTAL_LAPS: int = 3
+var web_race_control: JavaScriptObject
 
 func _ready() -> void:
  setup_input()
@@ -90,6 +91,19 @@ func _ready() -> void:
  add_child(audio)
  load_record()
  show_home()
+ if OS.has_feature("web"):
+  web_race_control = JavaScriptBridge.create_callback(on_web_race_control)
+  var browser = JavaScriptBridge.get_interface("window")
+  browser.coastRaceControl = web_race_control
+
+func on_web_race_control(_arguments: Array) -> void:
+ match state:
+  "menu", "results":
+   start_race()
+  "race":
+   pause_race()
+  "pause":
+   resume_race()
 
 func setup_input() -> void:
  var bindings = {"steer_left":[KEY_LEFT,KEY_A],"steer_right":[KEY_RIGHT,KEY_D],"throttle":[KEY_UP,KEY_W],"brake":[KEY_DOWN,KEY_S],"drift":[KEY_SPACE],"boost":[KEY_SHIFT],"pause_race":[KEY_ESCAPE],"rescue":[KEY_R],"camera_view":[KEY_C]}
