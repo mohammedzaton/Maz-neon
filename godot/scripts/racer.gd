@@ -9,6 +9,10 @@ var car_name: String = "APEX GT"
 var speed: float = 0
 var nitro: float = 100
 var steer: float = 0
+var web_steer: float = 0.0
+var web_pedals: int = 0
+# Shared with the mobile web controls.
+enum WebPedal { BRAKE = 1, BOOST = 2, DRIFT = 4, GAS = 8 }
 var drift_points: float = 0
 var boosting: bool = false
 var lap: int = 0
@@ -81,11 +85,11 @@ func _physics_process(delta: float) -> void:
  var braking: bool = false
  var handbrake: bool = false
  if is_player:
-  desired_steer = Input.get_axis("steer_left","steer_right")
-  throttle = 1.0 if throttle_assist or Input.is_action_pressed("throttle") else 0.0
-  braking = Input.is_action_pressed("brake")
-  handbrake = Input.is_action_pressed("drift") and speed>13
-  boosting = Input.is_action_pressed("boost") and nitro>2 and not braking
+  desired_steer = clampf(Input.get_axis("steer_left","steer_right")+web_steer,-1.0,1.0)
+  throttle = 1.0 if throttle_assist or Input.is_action_pressed("throttle") or (web_pedals & WebPedal.GAS)!=0 else 0.0
+  braking = Input.is_action_pressed("brake") or (web_pedals & WebPedal.BRAKE)!=0
+  handbrake = (Input.is_action_pressed("drift") or (web_pedals & WebPedal.DRIFT)!=0) and speed>13
+  boosting = (Input.is_action_pressed("boost") or (web_pedals & WebPedal.BOOST)!=0) and nitro>2 and not braking
  else:
   var lookahead = 12+speed*0.45
   var target = track.sample(progress+lookahead)+track.right(progress+lookahead)*ai_lane

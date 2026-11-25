@@ -23,6 +23,7 @@ var lap_started: float = 0
 var lap_times: Array[float] = []
 const TOTAL_LAPS: int = 3
 var web_race_control: JavaScriptObject
+var web_touch_input: JavaScriptObject
 var web_countdown_deadline_ms: int = 0
 
 func _ready() -> void:
@@ -96,6 +97,8 @@ func _ready() -> void:
   web_race_control = JavaScriptBridge.create_callback(on_web_race_control)
   var browser = JavaScriptBridge.get_interface("window")
   browser.coastRaceControl = web_race_control
+  web_touch_input = JavaScriptBridge.create_callback(on_web_touch_input)
+  browser.coastTouchInput = web_touch_input
 
 func on_web_race_control(_arguments: Array) -> void:
  match state:
@@ -105,6 +108,19 @@ func on_web_race_control(_arguments: Array) -> void:
    pause_race()
   "pause":
    resume_race()
+
+func on_web_touch_input(arguments: Array) -> void:
+ if arguments.size()!=2 or not (arguments[0] is float or arguments[0] is int) or not (arguments[1] is float or arguments[1] is int):
+  return
+ if not is_finite(arguments[0]) or not is_finite(arguments[1]):
+  return
+ if not hud.uses_web_touch:
+  hud.enable_web_touch()
+  screen_steering.reset()
+  screen_steering.enabled = false
+ if state=="race":
+  player.web_steer = clampf(arguments[0],-1.0,1.0)
+  player.web_pedals = int(clampf(arguments[1],0.0,15.0))
 
 func setup_input() -> void:
  var bindings = {"steer_left":[KEY_LEFT,KEY_A],"steer_right":[KEY_RIGHT,KEY_D],"throttle":[KEY_UP,KEY_W],"brake":[KEY_DOWN,KEY_S],"drift":[KEY_SPACE],"boost":[KEY_SHIFT],"pause_race":[KEY_ESCAPE],"rescue":[KEY_R],"camera_view":[KEY_C]}
@@ -117,6 +133,8 @@ func setup_input() -> void:
    InputMap.action_add_event(action,event)
 
 func clear_input() -> void:
+ player.web_steer = 0.0
+ player.web_pedals = 0
  if screen_steering:
   screen_steering.reset()
  for action in ["steer_left","steer_right","throttle","brake","drift","boost"]:
@@ -125,7 +143,7 @@ func clear_input() -> void:
 func set_running(value: bool) -> void:
  player.running = value
  if screen_steering:
-  screen_steering.enabled=value
+  screen_steering.enabled = value and not hud.uses_web_touch
  if speed_fx:
   speed_fx.active=value
  for rival in rivals:

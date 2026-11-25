@@ -26,6 +26,8 @@ var map_control: Control
 var map_points: PackedVector2Array = []
 var map_racers: Array[Vector2] = []
 var touch_buttons: Array[TouchScreenButton] = []
+var steer_hint: Label
+var uses_web_touch: bool = false
 var player_name: String = "APEX GT"
 var result_title: Label
 var result_stats: Label
@@ -125,7 +127,7 @@ func _ready() -> void:
  button(race_ui,"RESET",Vector2(940,25),Vector2(100,52),func(): rescue_requested.emit())
  countdown_label = label(root,"",100,Vector2(560,245),Vector2(400,160),CYAN)
  # Native multitouch buttons: no JavaScript joystick and no mouse-only pressed signals.
- label(race_ui,"المس يمين أو شمال الشاشة • اسحب لتحديد قوة التوجيه",14,Vector2(40,650),Vector2(650,40),CYAN)
+ steer_hint = label(race_ui,"المس يمين أو شمال الشاشة • اسحب لتحديد قوة التوجيه",14,Vector2(40,650),Vector2(650,40),CYAN)
  add_touch("brake","BRAKE",Vector2(925,615),Color("794438"))
  add_touch("drift","DRIFT",Vector2(1050,615),Color("4a5968"))
  add_touch("boost","NITRO",Vector2(1175,615),Color("237a71"))
@@ -203,6 +205,7 @@ func layout() -> void:
 func show_mode(mode: String) -> void:
  if OS.has_feature("web"):
   var document = JavaScriptBridge.get_interface("document")
+  document.documentElement.setAttribute("data-coast-manual","false" if assist.button_pressed else "true")
   document.documentElement.setAttribute("data-coast-state",mode)
  menu.visible = mode=="menu"
  race_ui.visible = mode in ["race","countdown"]
@@ -210,7 +213,13 @@ func show_mode(mode: String) -> void:
  results.visible = mode=="results"
  countdown_label.visible = mode=="countdown"
  for b in touch_buttons:
-  b.visible = mode=="race" and (b.action!="throttle" or not assist.button_pressed)
+  b.visible = mode=="race" and not uses_web_touch and (b.action!="throttle" or not assist.button_pressed)
+
+func enable_web_touch() -> void:
+ uses_web_touch = true
+ steer_hint.hide()
+ for button in touch_buttons:
+  button.hide()
 
 func draw_map(at_points: PackedVector2Array, racers: Array[Vector2]) -> void:
  map_points = at_points
