@@ -100,7 +100,15 @@ func _ready() -> void:
   web_touch_input = JavaScriptBridge.create_callback(on_web_touch_input)
   browser.coastTouchInput = web_touch_input
 
-func on_web_race_control(_arguments: Array) -> void:
+func on_web_race_control(arguments: Array) -> void:
+ if not arguments.is_empty():
+  if state=="race":
+   match arguments[0]:
+    "reset":
+     hud.rescue_requested.emit()
+    "camera":
+     hud.camera_requested.emit()
+  return
  match state:
   "menu", "results":
    start_race()
